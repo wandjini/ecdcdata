@@ -7,7 +7,8 @@
 		},
 		"parameters": {
 			"relativePath": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "/cloudboxacademy/covid19/blob/main/ecdc_data/case_deaths_uk_ind_only.csv"
 			}
 		},
 		"annotations": [],
@@ -20,10 +21,10 @@
 					"type": "Expression"
 				}
 			},
-			"columnDelimiter": ",",
+			"columnDelimiter": "\t",
 			"escapeChar": "\\",
-			"firstRowAsHeader": true,
-			"quoteChar": "\""
+			"firstRowAsHeader": false,
+			"quoteChar": null
 		},
 		"schema": []
 	},
