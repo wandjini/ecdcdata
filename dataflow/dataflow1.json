@@ -110,6 +110,7 @@
 				"     skipDuplicateMapOutputs: true) ~> cleanUpDuplicated",
 				"cleanUpDuplicated sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
+				"     truncate: true,",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
