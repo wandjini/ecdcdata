@@ -1,0 +1,9 @@
+{
+	"name": "GWReportingDF",
+	"location": "uksouth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f81f0dc0-2073-438c-80a4-298cd6bd84f1",
+		"tenantId": "8fc2003d-2ccd-423b-8e05-1fbe52256289"
+	}
+}
