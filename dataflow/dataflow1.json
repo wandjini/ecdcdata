@@ -13,14 +13,43 @@
 				}
 			],
 			"sinks": [],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "FilterOnlyEurope"
+				},
+				{
+					"name": "SelectOnlyRequiredFields"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
-				"          {<!DOCTYPE html>} as string",
+				"          country as string,",
+				"          country_code as string,",
+				"          continent as string,",
+				"          population as integer,",
+				"          indicator as string,",
+				"          daily_count as integer,",
+				"          date as date,",
+				"          rate_14_day as double,",
+				"          source as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> CaseAndDeathsDataFlowSource"
+				"     ignoreNoFilesFound: false) ~> CaseAndDeathsDataFlowSource",
+				"CaseAndDeathsDataFlowSource filter(continent == 'Europe' && not(isNull(country))) ~> FilterOnlyEurope",
+				"FilterOnlyEurope select(mapColumn(",
+				"          country,",
+				"          country_code,",
+				"          population,",
+				"          indicator,",
+				"          daily_count,",
+				"          source,",
+				"          each(match(name == 'date'),",
+				"               'reported_date' = $$),",
+				"          cases_indicator = indicator",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: true) ~> SelectOnlyRequiredFields"
 			]
 		}
 	}
