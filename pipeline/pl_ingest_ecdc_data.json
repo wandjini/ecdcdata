@@ -103,7 +103,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"fileName": {
-											"value": "@item().sourceRelativePath\n",
+											"value": "@item().sourceRelativePath",
 											"type": "Expression"
 										}
 									}
