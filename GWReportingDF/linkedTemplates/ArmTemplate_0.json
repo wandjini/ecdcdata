@@ -278,6 +278,48 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_ecdc_raw_data')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_ablob_covidreportingsa",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "ecdc_data",
+						"container": "lookup"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "<!DOCTYPE html>",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_ablob_covidreportingsa')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_ecdc_raw_data_dl')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -710,8 +752,9 @@
 										"source": {
 											"type": "DelimitedTextSource",
 											"storeSettings": {
-												"type": "HttpReadSettings",
-												"requestMethod": "GET"
+												"type": "AzureBlobStorageReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
 											},
 											"formatSettings": {
 												"type": "DelimitedTextReadSettings"
@@ -740,10 +783,10 @@
 									},
 									"inputs": [
 										{
-											"referenceName": "ds_ecdc_raw_csv_data_http",
+											"referenceName": "ds_ecdc_raw_data",
 											"type": "DatasetReference",
 											"parameters": {
-												"relativePath": {
+												"fileName": {
 													"value": "@item().sourceRelativePath",
 													"type": "Expression"
 												}
@@ -786,7 +829,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_ecdc_lookup')]",
-				"[concat(variables('factoryId'), '/datasets/ds_ecdc_raw_csv_data_http')]",
+				"[concat(variables('factoryId'), '/datasets/ds_ecdc_raw_data')]",
 				"[concat(variables('factoryId'), '/datasets/ds_ecdc_raw_data_dl')]"
 			]
 		},
@@ -1454,55 +1497,6 @@
 				"[concat(variables('factoryId'), '/datasets/CasesAndDeaths')]",
 				"[concat(variables('factoryId'), '/datasets/ds_lookup_country')]",
 				"[concat(variables('factoryId'), '/datasets/ds_processed_cases_and_death_dl')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_process_hospital_admissions_data')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ingestAndTransformECDCData",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "df_hospital_admissions",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"hospitalAdminssionsSource": {},
-									"countryLookupsource": {},
-									"dimDateSource": {},
-									"weeklySink": {},
-									"dailySink": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/df_hospital_admissions')]"
 			]
 		}
 	]
