@@ -1,5 +1,5 @@
 {
-	"name": "ds_weekly_covid_reported_data",
+	"name": "ds_reprorted_daily_hospital_admissions",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_adls_covidreportingdl",
@@ -10,7 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": "ecdc_data/weekly_hospital_admissions",
+				"folderPath": "ecdc_data/daily_hospital_admissions",
 				"fileSystem": "processed"
 			},
 			"columnDelimiter": ",",
