@@ -11,8 +11,20 @@
 		"ls_adls_covidreportingdl_accountKey": {
 			"value": ""
 		},
+		"ls_covid_reporting_azure_sql_database_password": {
+			"value": ""
+		},
 		"ls_adls_covidreportingdl_properties_typeProperties_url": {
 			"value": "https://gwcovidreportingdl.dfs.core.windows.net/"
+		},
+		"ls_covid_reporting_azure_sql_database_properties_typeProperties_server": {
+			"value": "gwcovid-reporting.database.windows.net"
+		},
+		"ls_covid_reporting_azure_sql_database_properties_typeProperties_database": {
+			"value": "covidreportingdb"
+		},
+		"ls_covid_reporting_azure_sql_database_properties_typeProperties_userName": {
+			"value": "adm"
 		},
 		"ls_http_opendata_europe_eu_properties_typeProperties_url": {
 			"value": "https://github.com"
