@@ -112,7 +112,13 @@
 							"outputs": [
 								{
 									"referenceName": "ds_ecdc_processed_data",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": {
+											"value": "@item().sinkFileName",
+											"type": "Expression"
+										}
+									}
 								}
 							]
 						}
