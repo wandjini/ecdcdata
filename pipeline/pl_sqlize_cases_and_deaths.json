@@ -20,6 +20,7 @@
 						"storeSettings": {
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
+							"wildcardFolderPath": "ecdc/cases_deaths",
 							"enablePartitionDiscovery": false
 						},
 						"formatSettings": {
@@ -45,7 +46,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "DelimitedText1",
+						"referenceName": "ds_processed_casess_and_deaths",
 						"type": "DatasetReference"
 					}
 				],

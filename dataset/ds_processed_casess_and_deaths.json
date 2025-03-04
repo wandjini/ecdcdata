@@ -1,5 +1,5 @@
 {
-	"name": "DelimitedText1",
+	"name": "ds_processed_casess_and_deaths",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_adls_covidreportingdl",
