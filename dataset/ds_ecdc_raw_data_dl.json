@@ -19,7 +19,6 @@
 					"value": "@dataset().fileName",
 					"type": "Expression"
 				},
-				"folderPath": "ecdc_data",
 				"container": "lookup"
 			},
 			"columnDelimiter": ",",
