@@ -2,17 +2,17 @@
 	"name": "CasesAndDeaths",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "ls_adls_covidreportingdl",
+			"referenceName": "ls_ablob_covidreportingsa",
 			"type": "LinkedServiceReference"
 		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobFSLocation",
-				"fileName": "case_deaths_uk_ind_only.csv",
+				"type": "AzureBlobStorageLocation",
+				"fileName": "cases_deaths.csv",
 				"folderPath": "ecdc_data",
-				"fileSystem": "raw"
+				"container": "lookup"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
