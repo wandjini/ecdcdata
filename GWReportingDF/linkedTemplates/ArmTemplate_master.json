@@ -65,13 +65,33 @@
 					},
 					"ls_http_opendata_europe_eu_properties_typeProperties_url": {
 						"value": "[parameters('ls_http_opendata_europe_eu_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "GWReportingDF_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"ingestPopulationTrigger_properties_typeProperties_scope": {
 						"value": "[parameters('ingestPopulationTrigger_properties_typeProperties_scope')]"
 					}
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'GWReportingDF_ArmTemplate_0')]"
+			]
 		}
 	]
 }
