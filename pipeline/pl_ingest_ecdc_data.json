@@ -100,7 +100,13 @@
 							"inputs": [
 								{
 									"referenceName": "ds_ecdc_raw_data",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": {
+											"value": "@item().sourceRelativePath\n",
+											"type": "Expression"
+										}
+									}
 								}
 							],
 							"outputs": [
