@@ -2,7 +2,7 @@
 	"name": "ds_ecdc_raw_csv_data_http",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "ls_http_opendata_europe_eu",
+			"referenceName": "ls_ablob_covidreportingsa",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
@@ -15,11 +15,12 @@
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
-				"type": "HttpServerLocation",
-				"relativeUrl": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
 					"value": "@dataset().relativePath",
 					"type": "Expression"
-				}
+				},
+				"container": "lookup"
 			},
 			"columnDelimiter": ";",
 			"escapeChar": "\\",
