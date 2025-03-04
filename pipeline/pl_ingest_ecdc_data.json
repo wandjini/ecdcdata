@@ -68,8 +68,9 @@
 								"source": {
 									"type": "DelimitedTextSource",
 									"storeSettings": {
-										"type": "HttpReadSettings",
-										"requestMethod": "GET"
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
 									},
 									"formatSettings": {
 										"type": "DelimitedTextReadSettings"
@@ -98,14 +99,8 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "ds_ecdc_raw_csv_data_http",
-									"type": "DatasetReference",
-									"parameters": {
-										"relativePath": {
-											"value": "@item().sourceRelativePath",
-											"type": "Expression"
-										}
-									}
+									"referenceName": "ds_ecdc_raw_data",
+									"type": "DatasetReference"
 								}
 							],
 							"outputs": [
