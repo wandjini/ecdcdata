@@ -6,7 +6,7 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "pl_ingest_population_data",
+					"referenceName": "pl_ingest_cases_and_deaths_data",
 					"type": "PipelineReference"
 				}
 			}
