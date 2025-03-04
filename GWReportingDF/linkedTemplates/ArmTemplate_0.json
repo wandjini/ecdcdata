@@ -246,7 +246,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "ls_http_opendata_europe_eu",
+					"referenceName": "ls_ablob_covidreportingsa",
 					"type": "LinkedServiceReference"
 				},
 				"parameters": {
@@ -259,11 +259,12 @@
 				"type": "DelimitedText",
 				"typeProperties": {
 					"location": {
-						"type": "HttpServerLocation",
-						"relativeUrl": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
 							"value": "@dataset().relativePath",
 							"type": "Expression"
-						}
+						},
+						"container": "lookup"
 					},
 					"columnDelimiter": ";",
 					"escapeChar": "\\",
@@ -273,7 +274,7 @@
 				"schema": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_http_opendata_europe_eu')]"
+				"[concat(variables('factoryId'), '/linkedServices/ls_ablob_covidreportingsa')]"
 			]
 		},
 		{
@@ -282,7 +283,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "ls_adls_covidreportingdl",
+					"referenceName": "ls_ablob_covidreportingsa",
 					"type": "LinkedServiceReference"
 				},
 				"parameters": {
@@ -294,13 +295,12 @@
 				"type": "DelimitedText",
 				"typeProperties": {
 					"location": {
-						"type": "AzureBlobFSLocation",
+						"type": "AzureBlobStorageLocation",
 						"fileName": {
 							"value": "@dataset().fileName",
 							"type": "Expression"
 						},
-						"folderPath": "ecdc_data",
-						"fileSystem": "raw"
+						"container": "lookup"
 					},
 					"columnDelimiter": ",",
 					"escapeChar": "\\",
@@ -310,7 +310,7 @@
 				"schema": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_covidreportingdl')]"
+				"[concat(variables('factoryId'), '/linkedServices/ls_ablob_covidreportingsa')]"
 			]
 		},
 		{
@@ -720,7 +720,7 @@
 										"sink": {
 											"type": "DelimitedTextSink",
 											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
+												"type": "AzureBlobStorageWriteSettings"
 											},
 											"formatSettings": {
 												"type": "DelimitedTextWriteSettings",
@@ -1061,135 +1061,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "CasesAndDeaths",
-								"type": "DatasetReference"
-							},
-							"name": "CaseAndDeathsDataFlowSource"
-						},
-						{
-							"dataset": {
-								"referenceName": "ds_lookup_country",
-								"type": "DatasetReference"
-							},
-							"name": "lookupCountrySource"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "ds_processed_cases_and_death_dl",
-								"type": "DatasetReference"
-							},
-							"name": "casesAndDeathsSink"
-						}
-					],
-					"transformations": [
-						{
-							"name": "FilterOnlyEurope"
-						},
-						{
-							"name": "SelectOnlyRequiredFields"
-						},
-						{
-							"name": "PivotTransformation"
-						},
-						{
-							"name": "lookupCountry"
-						},
-						{
-							"name": "cleanUpDuplicated"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          country as string,",
-						"          country_code as string,",
-						"          continent as string,",
-						"          population as integer,",
-						"          indicator as string,",
-						"          daily_count as integer,",
-						"          date as date,",
-						"          rate_14_day as double,",
-						"          source as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> CaseAndDeathsDataFlowSource",
-						"source(output(",
-						"          country as string,",
-						"          country_code_2_digit as string,",
-						"          country_code_3_digit as string,",
-						"          continent as string,",
-						"          population as integer",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> lookupCountrySource",
-						"CaseAndDeathsDataFlowSource filter(continent == 'Europe' && not(isNull(country))) ~> FilterOnlyEurope",
-						"FilterOnlyEurope select(mapColumn(",
-						"          country,",
-						"          country_code,",
-						"          population,",
-						"          indicator,",
-						"          daily_count,",
-						"          source,",
-						"          cases_indicator = indicator,",
-						"          each(match(name=='date'),",
-						"               'reported_date' = $$)",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: true) ~> SelectOnlyRequiredFields",
-						"SelectOnlyRequiredFields pivot(groupBy(country,",
-						"          country_code,",
-						"          population,",
-						"          reported_date),",
-						"     pivotBy(indicator, ['confirmed cases', 'deaths']),",
-						"     count = sum(daily_count),",
-						"     columnNaming: '$V_$N',",
-						"     lateral: false) ~> PivotTransformation",
-						"PivotTransformation, lookupCountrySource lookup(PivotTransformation@country == lookupCountrySource@country,",
-						"     multiple: false,",
-						"     pickup: 'any',",
-						"     broadcast: 'auto')~> lookupCountry",
-						"lookupCountry select(mapColumn(",
-						"          country = PivotTransformation@country,",
-						"          country_code_2_digit,",
-						"          country_code_3_digit,",
-						"          population = PivotTransformation@population,",
-						"          reported_date,",
-						"          cases_count = {confirmed cases_count},",
-						"          deaths_count,",
-						"          population = lookupCountrySource@population",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> cleanUpDuplicated",
-						"cleanUpDuplicated sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     truncate: true,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> casesAndDeathsSink"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/CasesAndDeaths')]",
-				"[concat(variables('factoryId'), '/datasets/ds_lookup_country')]",
-				"[concat(variables('factoryId'), '/datasets/ds_processed_cases_and_death_dl')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/df_hospital_admissions')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -1454,6 +1325,135 @@
 				"[concat(variables('factoryId'), '/datasets/ds_weekly_covid_reported_data')]",
 				"[concat(variables('factoryId'), '/linkedServices/ls_adls_covidreportingdl')]",
 				"[concat(variables('factoryId'), '/datasets/ds_reprorted_daily_hospital_admissions')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_transform_cases_deaths')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "CasesAndDeaths",
+								"type": "DatasetReference"
+							},
+							"name": "CaseAndDeathsDataFlowSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "ds_lookup_country",
+								"type": "DatasetReference"
+							},
+							"name": "lookupCountrySource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_processed_cases_and_death_dl",
+								"type": "DatasetReference"
+							},
+							"name": "casesAndDeathsSink"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterOnlyEurope"
+						},
+						{
+							"name": "SelectOnlyRequiredFields"
+						},
+						{
+							"name": "PivotTransformation"
+						},
+						{
+							"name": "lookupCountry"
+						},
+						{
+							"name": "cleanUpDuplicated"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          country as string,",
+						"          country_code as string,",
+						"          continent as string,",
+						"          population as integer,",
+						"          indicator as string,",
+						"          daily_count as integer,",
+						"          date as date,",
+						"          rate_14_day as double,",
+						"          source as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> CaseAndDeathsDataFlowSource",
+						"source(output(",
+						"          country as string,",
+						"          country_code_2_digit as string,",
+						"          country_code_3_digit as string,",
+						"          continent as string,",
+						"          population as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> lookupCountrySource",
+						"CaseAndDeathsDataFlowSource filter(continent == 'Europe' && not(isNull(country))) ~> FilterOnlyEurope",
+						"FilterOnlyEurope select(mapColumn(",
+						"          country,",
+						"          country_code,",
+						"          population,",
+						"          indicator,",
+						"          daily_count,",
+						"          source,",
+						"          cases_indicator = indicator,",
+						"          each(match(name=='date'),",
+						"               'reported_date' = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: true) ~> SelectOnlyRequiredFields",
+						"SelectOnlyRequiredFields pivot(groupBy(country,",
+						"          country_code,",
+						"          population,",
+						"          reported_date),",
+						"     pivotBy(indicator, ['confirmed cases', 'deaths']),",
+						"     count = sum(daily_count),",
+						"     columnNaming: '$V_$N',",
+						"     lateral: false) ~> PivotTransformation",
+						"PivotTransformation, lookupCountrySource lookup(PivotTransformation@country == lookupCountrySource@country,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> lookupCountry",
+						"lookupCountry select(mapColumn(",
+						"          country = PivotTransformation@country,",
+						"          country_code_2_digit,",
+						"          country_code_3_digit,",
+						"          population = PivotTransformation@population,",
+						"          reported_date,",
+						"          cases_count = {confirmed cases_count},",
+						"          deaths_count,",
+						"          population = lookupCountrySource@population",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> cleanUpDuplicated",
+						"cleanUpDuplicated sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     truncate: true,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> casesAndDeathsSink"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/CasesAndDeaths')]",
+				"[concat(variables('factoryId'), '/datasets/ds_lookup_country')]",
+				"[concat(variables('factoryId'), '/datasets/ds_processed_cases_and_death_dl')]"
 			]
 		},
 		{
