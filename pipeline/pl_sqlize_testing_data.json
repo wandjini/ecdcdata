@@ -5,7 +5,14 @@
 			{
 				"name": "Copy Testing Data to Azure SQL DB",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Ingest Testing Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -20,6 +27,7 @@
 						"storeSettings": {
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
+							"wildcardFileName": "*",
 							"enablePartitionDiscovery": false
 						},
 						"formatSettings": {
@@ -28,8 +36,10 @@
 					},
 					"sink": {
 						"type": "AzureSqlSink",
+						"preCopyScript": "TRUNCATE TABLE FROM covid_reporting.testing;",
 						"writeBehavior": "insert",
-						"sqlWriterUseTableLock": false
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
 					},
 					"enableStaging": false,
 					"translator": {
@@ -37,9 +47,8 @@
 						"mappings": [
 							{
 								"source": {
-									"name": "country",
 									"type": "String",
-									"physicalType": "String"
+									"ordinal": 1
 								},
 								"sink": {
 									"name": "country",
@@ -48,6 +57,10 @@
 								}
 							},
 							{
+								"source": {
+									"type": "String",
+									"ordinal": 2
+								},
 								"sink": {
 									"name": "country_code_2_digit",
 									"type": "String",
@@ -55,6 +68,11 @@
 								}
 							},
 							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 4
+								},
 								"sink": {
 									"name": "country_code_3_digit",
 									"type": "String",
@@ -63,9 +81,8 @@
 							},
 							{
 								"source": {
-									"name": "year_week",
 									"type": "String",
-									"physicalType": "String"
+									"ordinal": 4
 								},
 								"sink": {
 									"name": "year_week",
@@ -74,6 +91,10 @@
 								}
 							},
 							{
+								"source": {
+									"type": "String",
+									"ordinal": 5
+								},
 								"sink": {
 									"name": "week_start_date",
 									"type": "DateTime",
@@ -81,6 +102,10 @@
 								}
 							},
 							{
+								"source": {
+									"type": "String",
+									"ordinal": 6
+								},
 								"sink": {
 									"name": "week_end_date",
 									"type": "DateTime",
@@ -89,9 +114,8 @@
 							},
 							{
 								"source": {
-									"name": "new_cases",
 									"type": "String",
-									"physicalType": "String"
+									"ordinal": 7
 								},
 								"sink": {
 									"name": "new_cases",
@@ -101,9 +125,8 @@
 							},
 							{
 								"source": {
-									"name": "tests_done",
 									"type": "String",
-									"physicalType": "String"
+									"ordinal": 8
 								},
 								"sink": {
 									"name": "tests_done",
@@ -113,9 +136,8 @@
 							},
 							{
 								"source": {
-									"name": "population",
 									"type": "String",
-									"physicalType": "String"
+									"ordinal": 9
 								},
 								"sink": {
 									"name": "population",
@@ -125,9 +147,8 @@
 							},
 							{
 								"source": {
-									"name": "testing_data_source",
 									"type": "String",
-									"physicalType": "String"
+									"ordinal": 10
 								},
 								"sink": {
 									"name": "testing_data_source",
@@ -155,6 +176,26 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "Ingest Testing Data",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
 			}
 		],
 		"annotations": []
