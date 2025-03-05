@@ -71,7 +71,7 @@
 								"source": {
 									"type": "String",
 									"physicalType": "String",
-									"ordinal": 4
+									"ordinal": 3
 								},
 								"sink": {
 									"name": "country_code_3_digit",
