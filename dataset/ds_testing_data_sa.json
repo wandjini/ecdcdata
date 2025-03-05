@@ -1,0 +1,61 @@
+{
+	"name": "ds_testing_data_sa",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_ablob_covidreportingsa",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "testing.csv",
+				"folderPath": "testing",
+				"container": "lookup"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "country",
+				"type": "String"
+			},
+			{
+				"name": "country_code",
+				"type": "String"
+			},
+			{
+				"name": "year_week",
+				"type": "String"
+			},
+			{
+				"name": "new_cases",
+				"type": "String"
+			},
+			{
+				"name": "tests_done",
+				"type": "String"
+			},
+			{
+				"name": "population",
+				"type": "String"
+			},
+			{
+				"name": "testing_rate",
+				"type": "String"
+			},
+			{
+				"name": "positivity_rate",
+				"type": "String"
+			},
+			{
+				"name": "testing_data_source",
+				"type": "String"
+			}
+		]
+	}
+}
