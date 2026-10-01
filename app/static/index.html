@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PharmaOpt</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Authentication -->
+  <section id="auth-view" class="auth hidden">
+    <div class="card auth-card">
+      <h1>PharmaOpt</h1>
+      <p class="muted">Optimise your supplier orders for maximum profit.</p>
+      <div class="tabs small">
+        <button data-auth="login" class="active">Sign in</button>
+        <button data-auth="register">New pharmacy</button>
+      </div>
+      <form id="login-form">
+        <label>Email <input name="email" type="email" required autocomplete="username"></label>
+        <label>Password <input name="password" type="password" required autocomplete="current-password"></label>
+        <button type="submit" class="primary">Sign in</button>
+      </form>
+      <form id="register-form" class="hidden">
+        <label>Pharmacy name <input name="pharmacy_name" required></label>
+        <label>Your name <input name="full_name"></label>
+        <label>Email <input name="email" type="email" required autocomplete="username"></label>
+        <label>Password (8+ characters) <input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
+        <button type="submit" class="primary">Create pharmacy account</button>
+      </form>
+      <p id="auth-error" class="error"></p>
+    </div>
+  </section>
+
+  <!-- Application -->
+  <section id="app-view" class="hidden">
+    <header class="topbar">
+      <strong>PharmaOpt</strong>
+      <span id="tenant-name" class="muted"></span>
+      <nav class="tabs" id="main-tabs">
+        <button data-tab="optimize" class="active">Optimize</button>
+        <button data-tab="products">Products &amp; needs</button>
+        <button data-tab="suppliers">Suppliers</button>
+        <button data-tab="compare">Price comparison</button>
+        <button data-tab="history">Saved orders</button>
+        <button data-tab="team">Team</button>
+      </nav>
+      <button id="logout" class="link">Sign out</button>
+    </header>
+
+    <main>
+      <!-- Optimize -->
+      <div id="tab-optimize" class="tab">
+        <div class="card">
+          <h2>Build the most profitable order</h2>
+          <form id="optimize-form" class="row">
+            <label>Budget <input name="budget" type="number" min="0" step="0.01" required></label>
+            <label>Order name <input name="name" placeholder="optional"></label>
+            <label class="inline"><input name="save" type="checkbox"> Save this order</label>
+            <button type="submit" class="primary">Optimize</button>
+          </form>
+          <details>
+            <summary>Restrict to suppliers</summary>
+            <div id="optimize-suppliers" class="checks"></div>
+          </details>
+        </div>
+        <div id="optimize-result"></div>
+      </div>
+
+      <!-- Products -->
+      <div id="tab-products" class="tab hidden">
+        <div class="card">
+          <h2>Products &amp; needs</h2>
+          <p class="muted">For each product (identified by the code shared across supplier catalogs) set the selling price
+            and the quantity you expect to sell (<em>max quantity</em>). <em>Min quantity</em> forces the optimizer to buy at least that amount.</p>
+          <form id="product-form" class="row">
+            <input name="code" placeholder="Code (CIP/EAN)" required>
+            <input name="name" placeholder="Name">
+            <input name="selling_price" type="number" step="0.01" min="0" placeholder="Selling price">
+            <input name="max_quantity" type="number" min="0" placeholder="Max qty">
+            <input name="min_quantity" type="number" min="0" placeholder="Min qty">
+            <button type="submit">Save</button>
+          </form>
+          <form id="product-import" class="row">
+            <input type="file" name="file" accept=".csv,text/csv" required>
+            <button type="submit">Import CSV</button>
+            <span class="muted">columns: code;name;selling_price;max_quantity;min_quantity</span>
+          </form>
+          <p id="product-msg" class="muted"></p>
+          <input id="product-search" placeholder="Search…">
+          <div id="product-table"></div>
+        </div>
+      </div>
+
+      <!-- Suppliers -->
+      <div id="tab-suppliers" class="tab hidden">
+        <div class="card">
+          <h2>Suppliers</h2>
+          <form id="supplier-form" class="row">
+            <input name="name" placeholder="Supplier name" required>
+            <label>Min order value <input name="min_order_value" type="number" min="0" step="0.01" value="0"></label>
+            <label>Shipping fee <input name="shipping_fee" type="number" min="0" step="0.01" value="0"></label>
+            <button type="submit">Add supplier</button>
+          </form>
+          <div id="supplier-table"></div>
+        </div>
+        <div id="catalog-card" class="card hidden">
+          <h2>Catalog – <span id="catalog-supplier"></span></h2>
+          <form id="catalog-import" class="row">
+            <input type="file" name="file" accept=".csv,.pdf,text/csv,application/pdf" required>
+            <label class="inline"><input type="checkbox" name="replace"> Replace whole catalog</label>
+            <button type="submit" value="preview">Preview</button>
+            <button type="submit" value="import">Import</button>
+            <span class="muted">CSV or PDF · columns: code, name, unit price, discount %, MOQ, pack size, stock</span>
+          </form>
+          <p id="catalog-msg" class="muted"></p>
+          <div id="catalog-preview"></div>
+          <form id="catalog-form" class="row">
+            <input name="code" placeholder="Code" required>
+            <input name="name" placeholder="Name">
+            <input name="unit_price" type="number" step="0.0001" min="0" placeholder="Unit price" required>
+            <input name="moq" type="number" min="1" placeholder="MOQ" value="1">
+            <input name="pack_size" type="number" min="1" placeholder="Pack" value="1">
+            <input name="stock" type="number" min="0" placeholder="Stock">
+            <button type="submit">Save item</button>
+          </form>
+          <div id="catalog-table"></div>
+        </div>
+      </div>
+
+      <!-- Comparison -->
+      <div id="tab-compare" class="tab hidden">
+        <div class="card">
+          <h2>Price comparison</h2>
+          <input id="compare-search" placeholder="Search…">
+          <div id="compare-table"></div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div id="tab-history" class="tab hidden">
+        <div class="card">
+          <h2>Saved orders</h2>
+          <div id="history-table"></div>
+        </div>
+        <div id="history-detail"></div>
+      </div>
+
+      <!-- Team -->
+      <div id="tab-team" class="tab hidden">
+        <div class="card">
+          <h2>Team</h2>
+          <form id="user-form" class="row">
+            <input name="email" type="email" placeholder="Email" required>
+            <input name="full_name" placeholder="Name">
+            <input name="password" type="password" minlength="8" placeholder="Password" required>
+            <select name="role"><option value="member">Member</option><option value="admin">Admin</option></select>
+            <button type="submit">Add user</button>
+          </form>
+          <p id="user-msg" class="muted"></p>
+          <div id="user-table"></div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
