@@ -9,11 +9,11 @@ def setup_pharmacy(client, headers):
     sup_a = client.post("/api/suppliers", json={"name": "Wholesaler A"}, headers=headers).json()
     sup_b = client.post("/api/suppliers", json={"name": "Wholesaler B"}, headers=headers).json()
     r = client.post(f"/api/suppliers/{sup_a['id']}/catalog/import", files={"file": ("a.csv", CATALOG_A)}, headers=headers)
-    assert r.json() == {"created": 2, "updated": 0, "errors": []}
+    assert r.json()["created"] == 2 and r.json()["errors"] == []
     r = client.post(f"/api/suppliers/{sup_b['id']}/catalog/import", files={"file": ("b.csv", CATALOG_B)}, headers=headers)
     assert r.json()["created"] == 2
     r = client.post("/api/products/import", files={"file": ("needs.csv", NEEDS)}, headers=headers)
-    assert r.json() == {"created": 0, "updated": 2, "errors": []}
+    assert r.json()["updated"] == 2 and r.json()["errors"] == []
     return sup_a, sup_b
 
 

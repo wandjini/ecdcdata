@@ -7,3 +7,4 @@ python-multipart>=0.0.9
 httpx>=0.27  # used by scripts/seed_demo.py
 numpy>=1.26
 scipy>=1.11
+pdfplumber>=0.11

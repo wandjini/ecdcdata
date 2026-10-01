@@ -277,15 +277,51 @@ $("#catalog-form").addEventListener("submit", async (e) => {
   } catch (err) { $("#catalog-msg").textContent = err.message; }
 });
 
-$("#catalog-import").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
+function importSummary(r) {
+  const errors = r.errors.length ? ` · ${r.errors.length} error(s): ${r.errors.slice(0, 5).join("; ")}` : "";
+  return `${r.dry_run ? "Preview" : "Imported"}: ${r.created} new, ${r.updated} updated${errors}`;
+}
+
+async function importCatalog(form, dryRun) {
+  const fd = new FormData(form);
   const replace = fd.get("replace") ? "true" : "false";
   fd.delete("replace");
+  const url = `/api/suppliers/${currentSupplier.id}/catalog/import?replace=${replace}&dry_run=${dryRun}`;
+  return api(url, { method: "POST", form: fd });
+}
+
+$("#catalog-import").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const dryRun = e.submitter?.value === "preview";
+  $("#catalog-msg").textContent = dryRun ? "Reading file…" : "Importing…";
+  $("#catalog-preview").innerHTML = "";
   try {
-    const r = await api(`/api/suppliers/${currentSupplier.id}/catalog/import?replace=${replace}`, { method: "POST", form: fd });
-    $("#catalog-msg").textContent = `Imported: ${r.created} created, ${r.updated} updated${r.errors.length ? ` · ${r.errors.length} error(s): ${r.errors.slice(0, 5).join("; ")}` : ""}`;
+    const r = await importCatalog(e.target, dryRun);
+    $("#catalog-msg").textContent = importSummary(r);
+    if (dryRun) {
+      $("#catalog-preview").innerHTML = `<h3>Check the lines read from the file</h3>${table([
+        { label: "Code", value: (i) => i.code },
+        { label: "Name", value: (i) => i.name },
+        { label: "Unit price (net)", num: true, value: (i) => money(i.unit_price) },
+        { label: "MOQ", num: true, value: (i) => i.moq },
+        { label: "Pack", num: true, value: (i) => i.pack_size },
+        { label: "Stock", num: true, value: (i) => i.stock ?? "∞" },
+      ], r.preview)}${r.preview.length ? '<p><button id="confirm-import" class="primary">Confirm import</button></p>' : ""}`;
+      return;
+    }
     e.target.reset();
+    loadCatalog(); loadSuppliers();
+  } catch (err) { $("#catalog-msg").textContent = err.message; }
+});
+
+document.addEventListener("click", async (e) => {
+  if (!e.target.closest("#confirm-import")) return;
+  try {
+    const form = $("#catalog-import");
+    const r = await importCatalog(form, false);
+    $("#catalog-msg").textContent = importSummary(r);
+    $("#catalog-preview").innerHTML = "";
+    form.reset();
     loadCatalog(); loadSuppliers();
   } catch (err) { $("#catalog-msg").textContent = err.message; }
 });
@@ -297,6 +333,7 @@ document.addEventListener("click", async (e) => {
     $("#catalog-supplier").textContent = currentSupplier.name;
     $("#catalog-card").classList.remove("hidden");
     $("#catalog-msg").textContent = "";
+    $("#catalog-preview").innerHTML = "";
     loadCatalog();
   }
   const delS = e.target.closest("[data-del-supplier]");

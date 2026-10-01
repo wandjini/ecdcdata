@@ -46,7 +46,7 @@ def list_products(ctx: Ctx, q: str = "", needed_only: bool = False):
 @router.put("", response_model=ProductOut)
 def upsert_product(data: ProductIn, ctx: Ctx):
     if data.min_quantity > data.max_quantity:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "min_quantity cannot exceed max_quantity")
+        raise HTTPException(422, "min_quantity cannot exceed max_quantity")
     product, _ = get_or_create_product(ctx, data.code, data.name)
     if data.name:
         product.name = data.name
@@ -66,7 +66,12 @@ def delete_product(code: str, ctx: Ctx):
 @router.post("/import", response_model=ImportReport)
 async def import_products(ctx: Ctx, file: UploadFile = File(...)):
     """CSV columns: code, name, selling_price, max_quantity, min_quantity."""
-    rows = read_rows(await file.read())
+    content = await file.read()
+    if content[:5] == b"%PDF-":
+        raise HTTPException(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "PDF import is available for supplier catalogs; use CSV here."
+        )
+    rows = read_rows(content)
     created = updated = 0
     errors: list[str] = []
     for line_no, row in enumerate(rows, start=2):

@@ -107,11 +107,14 @@
         <div id="catalog-card" class="card hidden">
           <h2>Catalog – <span id="catalog-supplier"></span></h2>
           <form id="catalog-import" class="row">
-            <input type="file" name="file" accept=".csv,text/csv" required>
+            <input type="file" name="file" accept=".csv,.pdf,text/csv,application/pdf" required>
             <label class="inline"><input type="checkbox" name="replace"> Replace whole catalog</label>
-            <button type="submit">Import CSV</button>
-            <span class="muted">columns: code;name;unit_price;moq;pack_size;stock</span>
+            <button type="submit" value="preview">Preview</button>
+            <button type="submit" value="import">Import</button>
+            <span class="muted">CSV or PDF · columns: code, name, unit price, discount %, MOQ, pack size, stock</span>
           </form>
+          <p id="catalog-msg" class="muted"></p>
+          <div id="catalog-preview"></div>
           <form id="catalog-form" class="row">
             <input name="code" placeholder="Code" required>
             <input name="name" placeholder="Name">
@@ -121,7 +124,6 @@
             <input name="stock" type="number" min="0" placeholder="Stock">
             <button type="submit">Save item</button>
           </form>
-          <p id="catalog-msg" class="muted"></p>
           <div id="catalog-table"></div>
         </div>
       </div>

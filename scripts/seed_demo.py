@@ -16,6 +16,7 @@ SUPPLIERS = [
     ("Grossiste A", "catalog_grossiste_a.csv", 0, 0),
     ("Grossiste B", "catalog_grossiste_b.csv", 150, 0),
     ("Labo Direct", "catalog_labo_direct.csv", 200, 15),
+    ("Grossiste C (PDF)", "catalog_grossiste_c.pdf", 0, 9.9),
 ]
 
 

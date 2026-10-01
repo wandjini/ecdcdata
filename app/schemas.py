@@ -125,6 +125,8 @@ class ImportReport(BaseModel):
     created: int
     updated: int
     errors: list[str]
+    dry_run: bool = False
+    preview: list[CatalogItemIn] = []  # parsed lines, only filled in dry-run mode
 
 
 # --- Optimization -----------------------------------------------------------

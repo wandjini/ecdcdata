@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from ..csv_import import parse_int, parse_number, read_rows
+from ..pdf_import import PdfImportError, read_pdf_rows
 from ..deps import Ctx, TenantContext
 from ..models import CatalogItem, Supplier
 from ..schemas import CatalogItemIn, CatalogItemOut, ImportReport, SupplierIn, SupplierOut
@@ -135,38 +136,75 @@ def delete_catalog_item(supplier_id: int, item_id: int, ctx: Ctx):
     ctx.db.commit()
 
 
-@router.post("/{supplier_id}/catalog/import", response_model=ImportReport)
-async def import_catalog(supplier_id: int, ctx: Ctx, file: UploadFile = File(...), replace: bool = False):
-    """CSV columns: code, name, unit_price, moq, pack_size, stock.
+def _read_catalog_file(filename: str, content: bytes) -> tuple[list[dict[str, str]], str, int]:
+    """Rows with canonical keys, the label used in error messages and the first row number."""
+    if content[:5] == b"%PDF-" or filename.lower().endswith(".pdf"):
+        try:
+            return read_pdf_rows(content), "row", 1
+        except PdfImportError as exc:
+            raise HTTPException(422, str(exc))
+    return read_rows(content), "line", 2
 
+
+def _catalog_item_from_row(row: dict[str, str]) -> CatalogItemIn:
+    price = parse_number(row.get("unit_price"))
+    if price is None:
+        raise ValueError("missing unit_price")
+    discount = parse_number(row.get("discount")) or 0.0
+    if not 0 <= discount < 100:
+        raise ValueError(f"invalid discount {row.get('discount')!r}")
+    return CatalogItemIn(
+        code=(row.get("code") or "").strip(),
+        name=(row.get("name") or "").strip(),
+        unit_price=round(price * (1 - discount / 100), 4),
+        moq=parse_int(row.get("moq")) or 1,
+        pack_size=parse_int(row.get("pack_size")) or 1,
+        stock=parse_int(row.get("stock")),
+    )
+
+
+@router.post("/{supplier_id}/catalog/import", response_model=ImportReport)
+async def import_catalog(
+    supplier_id: int,
+    ctx: Ctx,
+    file: UploadFile = File(...),
+    replace: bool = False,
+    dry_run: bool = False,
+):
+    """Import a catalog from a CSV or PDF file.
+
+    Recognised columns (French or English headers): code, name, unit_price, discount (%),
+    moq, pack_size, stock. A discount is applied to the unit price.
+
+    With ``dry_run=true`` nothing is saved and the parsed lines are returned in ``preview``,
+    so they can be checked (especially for PDF files) before importing.
     With ``replace=true`` the items absent from the file are removed from the catalog.
     """
     supplier = _get_supplier(ctx, supplier_id)
-    rows = read_rows(await file.read())
+    rows, label, first = _read_catalog_file(file.filename or "", await file.read())
+    existing = {item.product.code for item in supplier.items}
     created = updated = 0
     errors: list[str] = []
+    preview: list[CatalogItemIn] = []
     seen_codes: set[str] = set()
-    for line_no, row in enumerate(rows, start=2):
+    for number, row in enumerate(rows, start=first):
         try:
-            price = parse_number(row.get("unit_price"))
-            if price is None:
-                raise ValueError("missing unit_price")
-            data = CatalogItemIn(
-                code=(row.get("code") or "").strip(),
-                name=(row.get("name") or "").strip(),
-                unit_price=price,
-                moq=parse_int(row.get("moq")) or 1,
-                pack_size=parse_int(row.get("pack_size")) or 1,
-                stock=parse_int(row.get("stock")),
-            )
+            data = _catalog_item_from_row(row)
         except ValueError as exc:  # includes pydantic ValidationError
-            errors.append(f"line {line_no}: {str(exc).splitlines()[0]}")
+            message = str(exc).splitlines()
+            errors.append(f"{label} {number}: {message[-1].strip() if len(message) > 1 else message[0]}")
             continue
-        if _upsert_item(ctx, supplier, data)[1]:
-            created += 1
+        if dry_run:
+            preview.append(data)
+            is_new = data.code not in existing and data.code not in seen_codes
         else:
-            updated += 1
+            is_new = _upsert_item(ctx, supplier, data)[1]
+        created += is_new
+        updated += not is_new
         seen_codes.add(data.code)
+    if dry_run:
+        ctx.db.rollback()
+        return ImportReport(created=created, updated=updated, errors=errors, preview=preview, dry_run=True)
     if replace and not errors:
         for item in list(supplier.items):
             if item.product.code not in seen_codes:
